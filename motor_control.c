@@ -15,13 +15,17 @@ int unexport_pins();
 int send_bits(int *bits);
 
 int main(int argc, char *argv[]){
-	if(export_pins_set_dirs()) {fprintf(stderr, "Failed to export pins.\nQuitting.\n"); return -1;}
+	//if(export_pins_set_dirs()) {fprintf(stderr, "Failed to export pins.\nQuitting.\n"); return -1;}
 
 	unsigned int motor_speed;
 	int *speed_bits = malloc(sizeof(int)*8);
-	int i;
-	printf("Please enter a speed (0-255):");
-	scanf("%u", &motor_speed);
+	int i = 1;
+	while(i){
+		printf("Please enter a speed (0-255):");
+		scanf("%u", &motor_speed);
+		if(0<=motor_speed && motor_speed <=255) i=0;
+		else printf("Speed outside of range!\n");
+	}
 	printf("speed_bits = {");
 	for(i=0; i<8; i++){
 		if(motor_speed % 2) speed_bits[i] = 1;
