@@ -7,7 +7,7 @@
 #define CLOCK_PIN "11"
 #define LATCH_PIN "12"
 
-#define GPIO_DEVICE_PATH "/sys/devices/virtual/gpio"
+#define GPIO_DEVICE_PATH "/sys/devices/virtual/gpio/gpio"
 #define GPIO_CLASS_PATH "/sys/class/gpio/"
 
 int export_pins_set_dirs();
@@ -15,7 +15,7 @@ int unexport_pins();
 int send_bits(int *bits);
 
 int main(int argc, char *argv[]){
-	//if(export_pins_set_dirs()) {fprintf(stderr, "Failed to export pins.\nQuitting.\n"); return -1;}
+	if(export_pins_set_dirs()) {fprintf(stderr, "Failed to export pins.\nQuitting.\n"); return -1;}
 
 	unsigned int motor_speed;
 	int *speed_bits = malloc(sizeof(int)*8);
@@ -38,7 +38,7 @@ int main(int argc, char *argv[]){
 	if(send_bits(speed_bits)) fprintf(stderr, "Failed to send the bits correctly!\n");
 	else printf("Seem to have correctly sent the bits.\n");
 	
-	unexport_pins();
+	if(unexport_pins()) fprintf(stderr, "A possible error occurred unexporting the pins.\n");
 	return 0;
 }
 
@@ -48,8 +48,10 @@ int main(int argc, char *argv[]){
 #define CLOCK_VAL (GPIO_DEVICE_PATH CLOCK_PIN "/value")
 #define LATCH_DIR (GPIO_DEVICE_PATH LATCH_PIN "/direction")
 #define LATCH_VAL (GPIO_DEVICE_PATH LATCH_PIN "/value")
-#define EXPORT_PATH (GPIO_CLASS_PATH "export")
-#define UNEXPORT_PATH (GPIO_CLASS_PATH "unexport")
+//#define EXPORT_PATH (GPIO_CLASS_PATH "export")
+#define EXPORT_PATH ("gpio-admin " "export")
+//#define UNEXPORT_PATH (GPIO_CLASS_PATH "unexport")
+#define UNEXPORT_PATH ("gpio-admin " "unexport")
 
 
 int export_pins_set_dirs(){
@@ -81,13 +83,17 @@ int export_pins_set_dirs(){
 }
 
 int unexport_pins(){
+	int ret_val = 0;
 	// Use gpio-admin to unexport pins
 	char unexport_cmd[PATH_MAX];
 	snprintf(unexport_cmd, PATH_MAX, "%s %s", UNEXPORT_PATH, DATA_PIN);
+	if (system(unexport_cmd)) ret_val = -1;
 	snprintf(unexport_cmd, PATH_MAX, "%s %s", UNEXPORT_PATH, CLOCK_PIN);
+	if (system(unexport_cmd)) ret_val = -1;
 	snprintf(unexport_cmd, PATH_MAX, "%s %s", UNEXPORT_PATH, LATCH_PIN);
+	if (system(unexport_cmd)) ret_val = -1;
 
-	return 0;
+	return ret_val;
 }
 
 int send_bits(int *bits){
